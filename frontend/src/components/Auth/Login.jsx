@@ -15,7 +15,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('https://social-hire-final-1.onrender.com/api/auth/login', { email, password });
+      const res = await axios.post('https://social-hire-final.onrender.com/api/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
 
       dispatch(loginSuccess({
