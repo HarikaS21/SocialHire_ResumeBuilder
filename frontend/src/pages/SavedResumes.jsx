@@ -15,7 +15,7 @@ const SavedBuilder = () => {
           return;
         }
 
-        const response = await axios.get('http://localhost:5000/api/resume/load', {
+        const response = await axios.get('https://social-hire-final-1.onrender.com/api/resume/load', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
