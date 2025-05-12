@@ -17,7 +17,7 @@ const SavedResumeView = () => {
         return;
       }
 
-      const response = await axios.get(`https://social-hire-final-1.onrender.com/api/resume/${id}`, {
+      const response = await axios.get(`https://social-hire-final.onrender.com/api/resume/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
