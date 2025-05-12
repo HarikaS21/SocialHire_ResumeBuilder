@@ -15,7 +15,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://social-hire-final-1.onrender.com/api/auth/register', {
+      await axios.post('https://social-hire-final.onrender.com/api/auth/register', {
         username,
         email,
         password,
