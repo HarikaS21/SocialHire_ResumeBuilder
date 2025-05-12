@@ -19,18 +19,43 @@ import ExperiencedTemplate2 from '../components/Templates/Experienced/Experience
 import ExperiencedTemplate3 from '../components/Templates/Experienced/ExperiencedTemplate3';
 import ExperiencedTemplate4 from '../components/Templates/Experienced/ExperiencedTemplate4';
 import ExperiencedTemplate5 from '../components/Templates/Experienced/ExperiencedTemplate5';
-// import ExperiencedTemplate6 from '../components/Templates/Experienced/ExperiencedTemplate6';
-// import ExperiencedTemplate7 from '../components/Templates/Experienced/ExperiencedTemplate7';
-// import ExperiencedTemplate8 from '../components/Templates/Experienced/ExperiencedTemplate8';
+
 import NonITTemplate1 from '../components/Templates/NonIT/NonITTemplate1';
 import NonITTemplate2 from '../components/Templates/NonIT/NonITTemplate2';
 import NonITTemplate3 from '../components/Templates/NonIT/NonITTemplate3';
+
+const allTemplates = {
+  fresher: [
+    { id: "fresher1", name: "Executive" },
+    { id: "fresher2", name: "Modern Pro" },
+    { id: "fresher3", name: "Minimalist" },
+    { id: "fresher4", name: "Creative" },
+    { id: "fresher5", name: "Corporate" },
+    { id: "fresher6", name: "Classic" },
+    { id: "fresher7", name: "Elite" },
+    { id: "fresher8", name: "Innovator" },
+    { id: "fresher9", name: "Visionary" },
+  ],
+  experienced: [
+    { id: "experienced1", name: "Senior Pro" },
+    { id: "experienced2", name: "Leadership" },
+    { id: "experienced3", name: "Director" },
+    { id: "experienced4", name: "Director" },
+    { id: "experienced5", name: "Extro" },
+  ],
+  nonit: [
+    { id: "nonit1", name: "Portfolio" },
+    { id: "nonit2", name: "Creative Pro" },
+    { id: "nonit3", name: "Artistic" },
+  ],
+};
 
 const ResumeBuilder = () => {
   const { templateType } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const templateId = new URLSearchParams(location.search).get('template');
+  const initialTemplateId = new URLSearchParams(location.search).get('template');
+  const [selectedTemplateId, setSelectedTemplateId] = useState(initialTemplateId);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -77,14 +102,14 @@ const ResumeBuilder = () => {
     if (section === 'achievements' || section === 'activities') {
       setFormData((prev) => ({ ...prev, [section]: [...prev[section], ''] }));
     } else if (section === 'experience') {
-      setFormData((prev) => ({ 
-        ...prev, 
-        [section]: [...prev[section], { 
-          company: '', 
-          role: '', 
-          duration: '', 
-          description: [''] 
-        }] 
+      setFormData((prev) => ({
+        ...prev,
+        [section]: [...prev[section], {
+          company: '',
+          role: '',
+          duration: '',
+          description: ['']
+        }]
       }));
     } else {
       const newItem = Object.fromEntries(Object.keys(formData[section][0]).map((key) => [key, '']));
@@ -117,116 +142,118 @@ const ResumeBuilder = () => {
   };
 
   const downloadResume = async () => {
-  setIsGeneratingPDF(true);
-  const resume = document.getElementById('resume-preview');
-  
-  // Store original styles
-  const originalOverflow = resume.style.overflow;
-  const originalHeight = resume.style.height;
-  const originalPosition = resume.style.position;
-  
-  // Create a container for the cloned resume
-  const container = document.createElement('div');
-  container.style.position = 'fixed';
-  container.style.left = '-10000px';
-  container.style.top = '0';
-  container.style.width = `${resume.offsetWidth}px`;
-  container.style.height = 'auto';
-  container.style.overflow = 'visible';
-  
-  // Clone the resume node
-  const clone = resume.cloneNode(true);
-  clone.id = 'resume-clone';
-  clone.style.height = 'auto';
-  clone.style.overflow = 'visible';
-  
-  // Add to DOM
-  container.appendChild(clone);
-  document.body.appendChild(container);
-  
-  try {
-    // Calculate dimensions after clone is in DOM
-    const totalHeight = clone.scrollHeight;
-    const totalWidth = clone.scrollWidth;
-    
-    const canvas = await html2canvas(clone, {
-      scale: 2,
-      scrollY: 0,
-      useCORS: true,
-      windowHeight: totalHeight,
-      height: totalHeight,
-      width: totalWidth,
-      logging: false,
-      backgroundColor: '#ffffff',
-      onclone: (document) => {
-        // Ensure cloned element has correct styles
-        const clonedResume = document.getElementById('resume-clone');
-        clonedResume.style.overflow = 'visible';
-        clonedResume.style.height = 'auto';
+    setIsGeneratingPDF(true);
+    const resume = document.getElementById('resume-preview');
+
+    // Store original styles
+    const originalOverflow = resume.style.overflow;
+    const originalHeight = resume.style.height;
+    const originalPosition = resume.style.position;
+
+    // Create a container for the cloned resume
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = '-10000px';
+    container.style.top = '0';
+    container.style.width = `${resume.offsetWidth}px`;
+    container.style.height = 'auto';
+    container.style.overflow = 'visible';
+
+    // Clone the resume node
+    const clone = resume.cloneNode(true);
+    clone.id = 'resume-clone';
+    clone.style.height = 'auto';
+    clone.style.overflow = 'visible';
+
+    // Add to DOM
+    container.appendChild(clone);
+    document.body.appendChild(container);
+
+    try {
+      // Calculate dimensions after clone is in DOM
+      const totalHeight = clone.scrollHeight;
+      const totalWidth = clone.scrollWidth;
+
+      const canvas = await html2canvas(clone, {
+        scale: 2,
+        scrollY: 0,
+        useCORS: true,
+        windowHeight: totalHeight,
+        height: totalHeight,
+        width: totalWidth,
+        logging: false,
+        backgroundColor: '#ffffff',
+        onclone: (document) => {
+          // Ensure cloned element has correct styles
+          const clonedResume = document.getElementById('resume-clone');
+          clonedResume.style.overflow = 'visible';
+          clonedResume.style.height = 'auto';
+        }
+      });
+
+      // Create PDF with proper dimensions (in mm)
+      const imgWidth = canvas.width * 0.264583;
+      const imgHeight = canvas.height * 0.264583;
+
+      // Determine PDF orientation
+      const pdf = new jsPDF({
+        orientation: imgWidth > imgHeight ? 'landscape' : 'portrait',
+        unit: 'mm',
+        format: [imgWidth, imgHeight]
+      });
+
+      // Add image to PDF
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
+
+      // Generate filename
+      let filename = 'my_resume.pdf';
+      if (formData.fullName && formData.fullName.trim() !== '') {
+        const sanitizedName = formData.fullName
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, '_')
+          .replace(/[^a-z0-9_]/g, '');
+        filename = `${sanitizedName}_resume.pdf`;
       }
-    });
 
-    // Create PDF with proper dimensions (in mm)
-    const imgWidth = canvas.width * 0.264583;
-    const imgHeight = canvas.height * 0.264583;
-    
-    // Determine PDF orientation
-    const pdf = new jsPDF({
-      orientation: imgWidth > imgHeight ? 'landscape' : 'portrait',
-      unit: 'mm',
-      format: [imgWidth, imgHeight]
-    });
+      pdf.save(filename);
 
-    // Add image to PDF
-    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
-    
-    // Generate filename
-    let filename = 'my_resume.pdf';
-    if (formData.fullName && formData.fullName.trim() !== '') {
-      const sanitizedName = formData.fullName
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, '_')
-        .replace(/[^a-z0-9_]/g, '');
-      filename = `${sanitizedName}_resume.pdf`;
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    } finally {
+      // Clean up
+      const container = document.querySelector('div[style*="-10000px"]');
+      if (container) {
+        document.body.removeChild(container);
+      }
+      setIsGeneratingPDF(false);
     }
-    
-    pdf.save(filename);
-    
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-  } finally {
-    // Clean up
-    const container = document.querySelector('div[style*="-10000px"]');
-    if (container) {
-      document.body.removeChild(container);
-    }
-    setIsGeneratingPDF(false);
-  }
-};
+  };
+
+  const handleTemplateChange = (templateId) => {
+    setSelectedTemplateId(templateId);
+  };
 
   const templateComponents = {
-    fresher1: <FresherTemplate1 formData={{...formData, summary: formData.summary}} fontColor={fontColor} fontFamily={fontFamily} />,
-    fresher2: <FresherTemplate2 formData={{...formData, summary: formData.summary}} fontColor={fontColor} fontFamily={fontFamily} />,
-    fresher3: <FresherTemplate3 formData={{...formData, summary: formData.summary}} fontColor={fontColor} fontFamily={fontFamily} />,
-    fresher4: <FresherTemplate4 formData={{...formData, summary: formData.summary}} fontColor={fontColor} fontFamily={fontFamily} />,
-    fresher5: <FresherTemplate5 formData={{...formData, summary: formData.summary}} fontColor={fontColor} fontFamily={fontFamily} />,
-    fresher6: <FresherTemplate6 formData={{...formData, summary: formData.summary}} fontColor={fontColor} fontFamily={fontFamily} />,
-    fresher7: <FresherTemplate7 formData={{...formData, summary: formData.summary}} fontColor={fontColor} fontFamily={fontFamily} />,
-    fresher8: <FresherTemplate8 formData={{...formData, summary: formData.summary}} fontColor={fontColor} fontFamily={fontFamily} />,
-    fresher9: <FresherTemplate9 formData={{...formData, summary: formData.summary}} fontColor={fontColor} fontFamily={fontFamily} />,
+    fresher1: <FresherTemplate1 formData={{ ...formData, summary: formData.summary }} fontColor={fontColor} fontFamily={fontFamily} />,
+    fresher2: <FresherTemplate2 formData={{ ...formData, summary: formData.summary }} fontColor={fontColor} fontFamily={fontFamily} />,
+    fresher3: <FresherTemplate3 formData={{ ...formData, summary: formData.summary }} fontColor={fontColor} fontFamily={fontFamily} />,
+    fresher4: <FresherTemplate4 formData={{ ...formData, summary: formData.summary }} fontColor={fontColor} fontFamily={fontFamily} />,
+    fresher5: <FresherTemplate5 formData={{ ...formData, summary: formData.summary }} fontColor={fontColor} fontFamily={fontFamily} />,
+    fresher6: <FresherTemplate6 formData={{ ...formData, summary: formData.summary }} fontColor={fontColor} fontFamily={fontFamily} />,
+    fresher7: <FresherTemplate7 formData={{ ...formData, summary: formData.summary }} fontColor={fontColor} fontFamily={fontFamily} />,
+    fresher8: <FresherTemplate8 formData={{ ...formData, summary: formData.summary }} fontColor={fontColor} fontFamily={fontFamily} />,
+    fresher9: <FresherTemplate9 formData={{ ...formData, summary: formData.summary }} fontColor={fontColor} fontFamily={fontFamily} />,
 
     experienced1: <ExperiencedTemplate1 formData={formData} fontColor={fontColor} fontFamily={fontFamily} />,
     experienced2: <ExperiencedTemplate2 formData={formData} fontColor={fontColor} fontFamily={fontFamily} />,
     experienced3: <ExperiencedTemplate3 formData={formData} fontColor={fontColor} fontFamily={fontFamily} />,
     experienced4: <ExperiencedTemplate4 formData={formData} fontColor={fontColor} fontFamily={fontFamily} />,
     experienced5: <ExperiencedTemplate5 formData={formData} fontColor={fontColor} fontFamily={fontFamily} />,
-    // experienced6: <ExperiencedTemplate6 formData={formData} fontColor={fontColor} fontFamily={fontFamily} />,
-    // experienced7: <ExperiencedTemplate7 formData={formData} fontColor={fontColor} fontFamily={fontFamily} />,
-    // experienced8: <ExperiencedTemplate8 formData={formData} fontColor={fontColor} fontFamily={fontFamily} />,
-    nonit1: <NonITTemplate1 formData={{...formData, summary: formData.summary}} fontColor={fontColor} fontFamily={fontFamily} />,
-    nonit2: <NonITTemplate2 formData={{...formData, summary: formData.summary}} fontColor={fontColor} fontFamily={fontFamily} />,
-    nonit3: <NonITTemplate3 formData={{...formData, summary: formData.summary}} fontColor={fontColor} fontFamily={fontFamily} />,
+
+    nonit1: <NonITTemplate1 formData={{ ...formData, summary: formData.summary }} fontColor={fontColor} fontFamily={fontFamily} />,
+    nonit2: <NonITTemplate2 formData={{ ...formData, summary: formData.summary }} fontColor={fontColor} fontFamily={fontFamily} />,
+    nonit3: <NonITTemplate3 formData={{ ...formData, summary: formData.summary }} fontColor={fontColor} fontFamily={fontFamily} />,
   };
 
   const showExperience = templateType === 'experienced' || templateType === 'nonit';
@@ -234,7 +261,7 @@ const ResumeBuilder = () => {
   const showCareerObjective = templateType === 'fresher' || templateType === 'nonit' || templateType === 'experienced';
   const showProjects = templateType !== 'experienced';
 
-  const SelectedTemplate = templateComponents[templateId] || <div className="text-red-500 text-center">Invalid template or no template selected.</div>;
+  const SelectedTemplate = templateComponents[selectedTemplateId] || <div className="text-red-500 text-center">Invalid template or no template selected.</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -247,22 +274,44 @@ const ResumeBuilder = () => {
             </h1>
             <p className="text-gray-500 text-sm">Fill in your details and see the live preview</p>
           </div>
-          <button 
-            onClick={downloadResume} 
-            disabled={isGeneratingPDF}
-            className={`flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-all shadow hover:shadow-md text-sm ${isGeneratingPDF ? 'opacity-75 cursor-not-allowed' : ''}`}
-          >
-            {isGeneratingPDF ? (
-              'Generating...'
-            ) : (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+          <div className="flex items-center gap-4">
+            {/* Template Selector Dropdown */}
+            <div className="relative min-w-[180px]">
+              <select
+                value={selectedTemplateId}
+                onChange={(e) => handleTemplateChange(e.target.value)}
+                className="appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 w-full cursor-pointer transition-all hover:border-blue-400 shadow-sm text-gray-800 font-medium"
+              >
+                {allTemplates[templateType].map((template) => (
+                  <option key={template.id} value={template.id} className="text-gray-800">
+                    {template.name}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-600">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
-                Download PDF
-              </>
-            )}
-          </button>
+              </div>
+            </div>
+
+            <button
+              onClick={downloadResume}
+              disabled={isGeneratingPDF}
+              className={`flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-all shadow hover:shadow-md text-sm ${isGeneratingPDF ? 'opacity-75 cursor-not-allowed' : ''}`}
+            >
+              {isGeneratingPDF ? (
+                'Generating...'
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                  Download PDF
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Main Content */}
@@ -290,20 +339,20 @@ const ResumeBuilder = () => {
                   )}
                 </div>
               </div>
-              
+
               {/* Personal Details */}
               <div className="space-y-3">
                 <h3 className="text-base font-semibold text-gray-800 border-b pb-1 border-gray-200">Personal Details</h3>
                 {['fullName', 'email', 'phone', 'address'].map((field) => (
                   <div key={field} className="space-y-1">
                     <label className="block text-xs font-medium text-gray-700 capitalize">{field.replace(/([A-Z])/g, ' $1').trim()}</label>
-                    <input 
-                      type={field === 'email' ? 'email' : 'text'} 
-                      name={field} 
-                      placeholder={`Enter your ${field.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`} 
-                      value={formData[field]} 
-                      onChange={handleChange} 
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                    <input
+                      type={field === 'email' ? 'email' : 'text'}
+                      name={field}
+                      placeholder={`Enter your ${field.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`}
+                      value={formData[field]}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     />
                   </div>
                 ))}
@@ -313,11 +362,11 @@ const ResumeBuilder = () => {
               {showCareerObjective && (
                 <div className="space-y-2">
                   <h3 className="text-base font-semibold text-gray-800 border-b pb-1 border-gray-200">Career Objective</h3>
-                  <textarea 
-                    name="summary" 
-                    placeholder="Enter your career objective or summary" 
-                    value={formData.summary} 
-                    onChange={handleChange} 
+                  <textarea
+                    name="summary"
+                    placeholder="Enter your career objective or summary"
+                    value={formData.summary}
+                    onChange={handleChange}
                     rows={3}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
                   />
@@ -331,20 +380,20 @@ const ResumeBuilder = () => {
                   <div className="space-y-1">
                     <label className="block text-xs font-medium text-gray-700">Font Color</label>
                     <div className="flex items-center gap-2">
-                      <input 
-                        type="color" 
-                        value={fontColor} 
-                        onChange={(e) => setFontColor(e.target.value)} 
-                        className="w-9 h-9 p-1 border rounded-md cursor-pointer" 
+                      <input
+                        type="color"
+                        value={fontColor}
+                        onChange={(e) => setFontColor(e.target.value)}
+                        className="w-9 h-9 p-1 border rounded-md cursor-pointer"
                       />
                       <span className="text-xs text-gray-500">{fontColor}</span>
                     </div>
                   </div>
                   <div className="space-y-1">
                     <label className="block text-xs font-medium text-gray-700">Font Style</label>
-                    <select 
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all" 
-                      value={fontFamily} 
+                    <select
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      value={fontFamily}
                       onChange={(e) => setFontFamily(e.target.value)}
                     >
                       <option value="Arial">Arial</option>
@@ -360,9 +409,9 @@ const ResumeBuilder = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <h3 className="text-base font-semibold text-gray-800">Education</h3>
-                  <button 
-                    type="button" 
-                    onClick={() => addItem('education')} 
+                  <button
+                    type="button"
+                    onClick={() => addItem('education')}
                     className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -374,9 +423,9 @@ const ResumeBuilder = () => {
                 {formData.education.map((edu, idx) => (
                   <div key={idx} className="space-y-2 p-3 text-sm bg-gray-50 rounded-md border border-gray-200 relative">
                     {formData.education.length > 1 && (
-                      <button 
-                        type="button" 
-                        onClick={() => removeItem('education', idx)} 
+                      <button
+                        type="button"
+                        onClick={() => removeItem('education', idx)}
                         className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -387,13 +436,13 @@ const ResumeBuilder = () => {
                     {['degree', 'school', 'location', 'year', 'grade'].map((field) => (
                       <div key={field} className="space-y-1">
                         <label className="block text-xs font-medium text-gray-700 capitalize">{field}</label>
-                        <input 
-                          type="text" 
-                          name={field} 
-                          placeholder={`Enter ${field}`} 
-                          value={edu[field]} 
-                          onChange={(e) => handleArrayChange('education', idx, e)} 
-                          className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                        <input
+                          type="text"
+                          name={field}
+                          placeholder={`Enter ${field}`}
+                          value={edu[field]}
+                          onChange={(e) => handleArrayChange('education', idx, e)}
+                          className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
                         />
                       </div>
                     ))}
@@ -406,9 +455,9 @@ const ResumeBuilder = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <h3 className="text-base font-semibold text-gray-800">Experience</h3>
-                    <button 
-                      type="button" 
-                      onClick={() => addItem('experience')} 
+                    <button
+                      type="button"
+                      onClick={() => addItem('experience')}
                       className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -420,9 +469,9 @@ const ResumeBuilder = () => {
                   {formData.experience.map((item, idx) => (
                     <div key={idx} className="space-y-2 p-3 text-sm bg-gray-50 rounded-md border border-gray-200 relative">
                       {formData.experience.length > 1 && (
-                        <button 
-                          type="button" 
-                          onClick={() => removeItem('experience', idx)} 
+                        <button
+                          type="button"
+                          onClick={() => removeItem('experience', idx)}
                           className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -433,45 +482,45 @@ const ResumeBuilder = () => {
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
                           <label className="block text-xs font-medium text-gray-700">Company</label>
-                          <input 
-                            type="text" 
-                            name="company" 
-                            placeholder="Enter company name" 
-                            value={item.company} 
-                            onChange={(e) => handleArrayChange('experience', idx, e)} 
-                            className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                          <input
+                            type="text"
+                            name="company"
+                            placeholder="Enter company name"
+                            value={item.company}
+                            onChange={(e) => handleArrayChange('experience', idx, e)}
+                            className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
                           />
                         </div>
                         <div className="space-y-1">
                           <label className="block text-xs font-medium text-gray-700">Role</label>
-                          <input 
-                            type="text" 
-                            name="role" 
-                            placeholder="Enter your role" 
-                            value={item.role} 
-                            onChange={(e) => handleArrayChange('experience', idx, e)} 
-                            className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                          <input
+                            type="text"
+                            name="role"
+                            placeholder="Enter your role"
+                            value={item.role}
+                            onChange={(e) => handleArrayChange('experience', idx, e)}
+                            className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
                           />
                         </div>
                       </div>
                       <div className="space-y-1">
                         <label className="block text-xs font-medium text-gray-700">Duration</label>
-                        <input 
-                          type="text" 
-                          name="duration" 
-                          placeholder="Enter duration (e.g., Jan 2020 - Present)" 
-                          value={item.duration} 
-                          onChange={(e) => handleArrayChange('experience', idx, e)} 
-                          className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                        <input
+                          type="text"
+                          name="duration"
+                          placeholder="Enter duration (e.g., Jan 2020 - Present)"
+                          value={item.duration}
+                          onChange={(e) => handleArrayChange('experience', idx, e)}
+                          className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
                         />
                       </div>
-                      
+
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
                           <label className="block text-xs font-medium text-gray-700">Description Bullet Points</label>
-                          <button 
-                            type="button" 
-                            onClick={() => addDescription('experience', idx)} 
+                          <button
+                            type="button"
+                            onClick={() => addDescription('experience', idx)}
                             className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -515,9 +564,9 @@ const ResumeBuilder = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <h3 className="text-base font-semibold text-gray-800">Internships</h3>
-                    <button 
-                      type="button" 
-                      onClick={() => addItem('internships')} 
+                    <button
+                      type="button"
+                      onClick={() => addItem('internships')}
                       className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -529,9 +578,9 @@ const ResumeBuilder = () => {
                   {formData.internships.map((item, idx) => (
                     <div key={idx} className="space-y-2 p-3 text-sm bg-gray-50 rounded-md border border-gray-200 relative">
                       {formData.internships.length > 1 && (
-                        <button 
-                          type="button" 
-                          onClick={() => removeItem('internships', idx)} 
+                        <button
+                          type="button"
+                          onClick={() => removeItem('internships', idx)}
                           className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -542,13 +591,13 @@ const ResumeBuilder = () => {
                       {Object.keys(item).map((field) => (
                         <div key={field} className="space-y-1">
                           <label className="block text-xs font-medium text-gray-700 capitalize">{field}</label>
-                          <input 
-                            type="text" 
-                            name={field} 
-                            placeholder={`Enter ${field}`} 
-                            value={item[field]} 
-                            onChange={(e) => handleArrayChange('internships', idx, e)} 
-                            className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                          <input
+                            type="text"
+                            name={field}
+                            placeholder={`Enter ${field}`}
+                            value={item[field]}
+                            onChange={(e) => handleArrayChange('internships', idx, e)}
+                            className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
                           />
                         </div>
                       ))}
@@ -562,9 +611,9 @@ const ResumeBuilder = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <h3 className="text-base font-semibold text-gray-800">Projects</h3>
-                    <button 
-                      type="button" 
-                      onClick={() => addItem('projects')} 
+                    <button
+                      type="button"
+                      onClick={() => addItem('projects')}
                       className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -576,9 +625,9 @@ const ResumeBuilder = () => {
                   {formData.projects.map((item, idx) => (
                     <div key={idx} className="space-y-2 p-3 text-sm bg-gray-50 rounded-md border border-gray-200 relative">
                       {formData.projects.length > 1 && (
-                        <button 
-                          type="button" 
-                          onClick={() => removeItem('projects', idx)} 
+                        <button
+                          type="button"
+                          onClick={() => removeItem('projects', idx)}
                           className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -602,13 +651,13 @@ const ResumeBuilder = () => {
                         ) : (
                           <div key={field} className="space-y-1">
                             <label className="block text-xs font-medium text-gray-700 capitalize">{field}</label>
-                            <input 
-                              type="text" 
-                              name={field} 
-                              placeholder={`Enter ${field}`} 
-                              value={item[field]} 
-                              onChange={(e) => handleArrayChange('projects', idx, e)} 
-                              className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                            <input
+                              type="text"
+                              name={field}
+                              placeholder={`Enter ${field}`}
+                              value={item[field]}
+                              onChange={(e) => handleArrayChange('projects', idx, e)}
+                              className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
                             />
                           </div>
                         )
@@ -622,9 +671,9 @@ const ResumeBuilder = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <h3 className="text-base font-semibold text-gray-800">Certifications</h3>
-                  <button 
-                    type="button" 
-                    onClick={() => addItem('certifications')} 
+                  <button
+                    type="button"
+                    onClick={() => addItem('certifications')}
                     className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -636,9 +685,9 @@ const ResumeBuilder = () => {
                 {formData.certifications.map((item, idx) => (
                   <div key={idx} className="space-y-2 p-3 text-sm bg-gray-50 rounded-md border border-gray-200 relative">
                     {formData.certifications.length > 1 && (
-                      <button 
-                        type="button" 
-                        onClick={() => removeItem('certifications', idx)} 
+                      <button
+                        type="button"
+                        onClick={() => removeItem('certifications', idx)}
                         className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -649,13 +698,13 @@ const ResumeBuilder = () => {
                     {Object.keys(item).map((field) => (
                       <div key={field} className="space-y-1">
                         <label className="block text-xs font-medium text-gray-700 capitalize">{field}</label>
-                        <input 
-                          type="text" 
-                          name={field} 
-                          placeholder={`Enter ${field}`} 
-                          value={item[field]} 
-                          onChange={(e) => handleArrayChange('certifications', idx, e)} 
-                          className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                        <input
+                          type="text"
+                          name={field}
+                          placeholder={`Enter ${field}`}
+                          value={item[field]}
+                          onChange={(e) => handleArrayChange('certifications', idx, e)}
+                          className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
                         />
                       </div>
                     ))}
@@ -666,11 +715,11 @@ const ResumeBuilder = () => {
               {/* Skills */}
               <div className="space-y-2">
                 <h3 className="text-base font-semibold text-gray-800 border-b pb-1 border-gray-200">Skills</h3>
-                <textarea 
-                  name="skills" 
-                  placeholder="Enter skills separated by commas (e.g., JavaScript, React, Node.js)" 
-                  value={formData.skills} 
-                  onChange={handleChange} 
+                <textarea
+                  name="skills"
+                  placeholder="Enter skills separated by commas (e.g., JavaScript, React, Node.js)"
+                  value={formData.skills}
+                  onChange={handleChange}
                   rows={2}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 />
@@ -680,9 +729,9 @@ const ResumeBuilder = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <h3 className="text-base font-semibold text-gray-800">Achievements</h3>
-                  <button 
-                    type="button" 
-                    onClick={() => addItem('achievements')} 
+                  <button
+                    type="button"
+                    onClick={() => addItem('achievements')}
                     className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -721,9 +770,9 @@ const ResumeBuilder = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <h3 className="text-base font-semibold text-gray-800">Activities</h3>
-                  <button 
-                    type="button" 
-                    onClick={() => addItem('activities')} 
+                  <button
+                    type="button"
+                    onClick={() => addItem('activities')}
                     className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
